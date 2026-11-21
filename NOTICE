@@ -1,0 +1,13 @@
+Domoticz-Rainstats
+Copyright 2026 Jan Reimen
+
+This project is licensed under the MIT License (see LICENSE).
+
+It replaces the dzVents script "RainStats V2.6", whose idea it follows: statistics
+of the rain over 24 h, 48 h, 168 h, 14 d, 30 d, 90 d, 180 d and 365 d, and a
+state file that the plugin can import once (RS_LEGACY_FILE). The code is written
+anew in Python for Domoticz (standard library only); no part of the script is
+copied.
+
+The rain data come from your own Domoticz. The plugin has no data source of its
+own and uses no third-party service.
