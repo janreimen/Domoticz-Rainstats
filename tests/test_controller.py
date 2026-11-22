@@ -446,13 +446,18 @@ class HistoryImport(unittest.TestCase):
     def logs(self, kind="log"):
         return dz.messages(kind)
 
+    def assertHalf(self, shown, exact):
+        """``exact`` is a value half-way between two numbers the device can show (3.75: "3.7" or "3.8"): either is
+        right, and which one comes out must not decide a test. The test checks it is the exact value, to a tenth."""
+        self.assertIn(shown, ("%.1f" % (exact - 0.05), "%.1f" % (exact + 0.05)))
+
     def test_it_is_read_once_after_the_first_reading_and_the_long_windows_are_complete(self):
         s = self.stack()
         s.client.counter = 3.0
         s.start()
         self.assertEqual(s.client.history_reads, 1)
         # the 3.0 mm that the counter had already counted today (the plugin's own data) and the days of the history
-        self.assertEqual(s.value(RAIN_24H), "3.8")                  # 3.0 + the last 18 of yesterday's 24 hours (0.75)
+        self.assertHalf(s.value(RAIN_24H), 3.75)                    # 3.0 + the last 18 of yesterday's 24 hours (0.75)
         self.assertEqual(s.value(RAIN_365D), "303.0")               # 3.0 + 300 days of 1 mm: all of them in the year
         self.assertTrue(any("Imported the daily rain history of IDX 1161: 300 days" in t for t in self.logs()))
         self.assertEqual(s.errors(), [])
@@ -607,7 +612,7 @@ class HistoryImport(unittest.TestCase):
     def test_the_rain_the_plugin_collects_afterwards_adds_to_the_history(self):
         s = self.stack()
         s.start()
-        self.assertEqual(s.value(RAIN_24H), "0.8")                  # the last 18 hours of yesterday: 0.75 mm
+        self.assertHalf(s.value(RAIN_24H), 0.75)                    # the last 18 hours of yesterday: 0.75 mm
         s.step(60, counter=1.5)
         self.assertEqual(s.value(RAIN_24H), "2.2")                  # + the 1.5 mm that fell, - a minute of yesterday
 

@@ -22,4 +22,4 @@ Package layout (each module has exactly one job):
 ``plugin.py`` is thin glue and the only module that imports ``Domoticz``.
 """
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"

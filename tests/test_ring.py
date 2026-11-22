@@ -1,4 +1,5 @@
 """The round-robin buffer: slots, wrap-around, expiry, spreading, saving. Includes a randomised check against a model."""
+import math
 import random
 import unittest
 
@@ -37,6 +38,16 @@ class RingBasics(unittest.TestCase):
         self.assertEqual(ring.window(now, 5), 5.0)
         self.assertEqual(ring.window(now, 10), 10.0)
         self.assertEqual(ring.window(now, 50), 10.0)
+
+    def test_a_window_sum_is_exact_whatever_the_python_version(self):
+        # 216 slots of 1/288 (18 hours of a day of 1 mm in 5-minute slots): the true sum is 0.75. A plain float sum()
+        # answers 0.7499999999999979 on Python 3.11 and older and 0.75 on 3.12 and newer, which turned "3.75 mm" into
+        # "3.7" or "3.8" depending on the Python version; the window sum is the same everywhere
+        ring = Ring(300, 300)
+        for slot in range(216):
+            ring.add(slot * 300, 1 / 288.0)
+        self.assertEqual(ring.window(215 * 300 + 1, 216), math.fsum([1 / 288.0] * 216))
+        self.assertEqual(ring.window(215 * 300 + 1, 216), 0.75)
 
     def test_values_in_one_slot_are_summed_in_a_sum_ring(self):
         ring = Ring(10, 60)

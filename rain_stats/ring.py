@@ -15,6 +15,7 @@ a read never needs to change the ring and a quiet period costs nothing. A value 
 The ring is saved sparsely, as a mapping from the absolute slot number to its value; the absolute number makes the
 file independent of where in the circle a slot happens to sit, so the size of a ring can change between versions.
 """
+import math
 from typing import Any, Dict, List, Optional
 
 from .util import safe_float, safe_int
@@ -100,7 +101,10 @@ class Ring:
         if low > high:
             return 0.0
         values = self._values(low, high)
-        return float(sum(values)) if self.mode == SUM else float(max(values))
+        # math.fsum, not sum(): Python 3.12 made sum() of floats more exact, so sum() answers differently on 3.12 and on
+        # older Pythons (0.75 or 0.7499999999999979 for 216 slots of 1/288). fsum is exact on every version: the same
+        # rain data show the same numbers whatever Python runs Domoticz
+        return float(math.fsum(values)) if self.mode == SUM else float(max(values))
 
     def edge(self, now: float, count: int) -> float:
         """The part of the slot before a window of ``count`` slots that still lies inside the period of ``count`` slots

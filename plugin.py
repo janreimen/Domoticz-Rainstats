@@ -1,5 +1,5 @@
 """
-<plugin key="Rain-Stats" name="Rain Statistics" author="Jan Reimen" version="0.0.2" wikilink="https://github.com/janreimen/Domoticz-Rainstats" externallink="https://github.com/janreimen/Domoticz-Rainstats">
+<plugin key="Rain-Stats" name="Rain Statistics" author="Jan Reimen" version="0.0.3" wikilink="https://github.com/janreimen/Domoticz-Rainstats" externallink="https://github.com/janreimen/Domoticz-Rainstats">
     <description>
         <h2>Rain Statistics</h2><br/>
         Reads the rain and the rain rate of your weather station from a Domoticz device and shows how much it rained

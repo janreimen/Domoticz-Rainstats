@@ -13,7 +13,7 @@ Before anything else:
       counter assumes, and how often does the station push a new value into Domoticz?
 - [x] Add the plugin as hardware (done 2026-11-19 in Domoticz 2026.4: the devices exist, `Rain 24 h` (now `Rain 1 d`)
       updates and passes midnight cleanly)
-- [ ] Look at the log (`Rain Statistics 0.0.2 starting ...`, `Windows: ...`, `Connected to Domoticz ...`, no errors) and
+- [ ] Look at the log (`Rain Statistics 0.0.3 starting ...`, `Windows: ...`, `Connected to Domoticz ...`, no errors) and
       at all 18 devices, the peak, status and info ones included
 - [ ] Run `python3 -m rain_stats --history <IDX>` against the real rain device and compare its days with the *Last
       year* graph of Domoticz; then set `RS_HISTORY_IDX`, check the log line `Imported the daily rain history ...`,

@@ -5,6 +5,28 @@ All notable changes to this project are documented here. The format follows
 (`MAJOR.MINOR.PATCH`, optionally a fourth `.N` for small fixes) so that release tags work with plugin managers
 such as PyPluginStore.
 
+## [0.0.3] - 2026-11-22
+
+A fix release: the same rain data now show the same numbers on every Python version, and the tests and the GitHub
+workflow run on every Python version they are meant for. The statistics, the devices, the settings and the state file
+are unchanged.
+
+### Fixed
+- **A window sum no longer depends on the Python version.** The rain of a window is the sum of its slots. Python 3.12
+  made the built-in `sum()` of floats more exact, so 216 slots of 1/288 mm added up to 0.75 on Python 3.12 and newer and
+  to 0.7499999999999979 on 3.11 and older. When a value was exactly between two numbers a device can show (3.75 mm), the
+  device showed 3.8 on one Python and 3.7 on another. The sum now uses `math.fsum`, which is exact everywhere. A test
+  pins it down (it fails with a plain `sum()` on Python 3.11 and older).
+- **Two tests no longer sit on a rounding boundary.** `test_it_is_read_once_after_the_first_reading_and_the_long_windows_are_complete`
+  and `test_the_rain_the_plugin_collects_afterwards_adds_to_the_history` expected "3.8" and "0.8" for a value that is
+  exactly 3.75 and 0.75; they failed on Python 3.9, 3.10 and 3.11 and passed on 3.12 and 3.13. They accept either neighbour
+  of an exact half, which is what such a value is.
+
+### Changed
+- **GitHub workflow:** `actions/setup-python` has no Python 3.9 for Ubuntu 26.04, which `ubuntu-latest` is now. The test
+  job runs Python 3.9 on `ubuntu-24.04` and 3.10 to 3.13 on `ubuntu-latest`.
+- The whole test suite (420 tests) was also run on Python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13.
+
 ## [0.0.2] - 2026-11-21
 
 The first release of this repository. It replaces the dzVents script *RainStats V2.6*. An earlier build (internally
@@ -76,4 +98,5 @@ changes that came out of that run, see [what is verified and what is not](README
 - **The rain rate is used**: peak per window.
 - **A source that cannot be read does not freeze the numbers**, and it is logged once.
 
+[0.0.3]: https://github.com/janreimen/Domoticz-Rainstats/releases/tag/v0.0.3
 [0.0.2]: https://github.com/janreimen/Domoticz-Rainstats/releases/tag/v0.0.2

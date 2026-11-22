@@ -27,7 +27,7 @@ survives restarts. It replaces the dzVents script *RainStats V2.6* and can take 
 * **Modular.** Counter logic, round-robin rings, statistics, state file, API client, settings, device layer and
   polling are separate modules; only `plugin.py` touches Domoticz.
 
-> **Status:** version 0.0.2. Developed against a **simulated** Domoticz (a real HTTP and TLS server inside the test
+> **Status:** version 0.0.3. Developed against a **simulated** Domoticz (a real HTTP and TLS server inside the test
 > suite) and a stub of the plugin API. Since the evening of **2026-11-19** it runs in the author's **Domoticz 2026.4**:
 > days of use, not months. The counting logic is checked against a ground-truth simulation of a year of weather; the
 > rest of the Domoticz side is checked against the documentation and the source of Domoticz. Read
@@ -562,7 +562,7 @@ delete it in *Setup > Devices*.
 
 * **most of Domoticz.** Only that one device has been looked at. Not seen: the Domoticz log, the peak, status and info
   devices, whether `SuppressTriggers` and the unit label behave as read, other Domoticz and Python versions (3.9 to
-  3.13 run in CI; 3.7 is checked statically).
+  3.13 are in the CI matrix and the suite was also run on 3.8; 3.7 is checked statically).
 * **the Sainlogic FT310 pipeline.** Not seen: how often your station pushes rain into Domoticz, and whether the
   `Rain` value resets at local midnight exactly as the code assumes. **Run `python3 -m rain_stats --rain-idx <IDX>` on
   your host first** and watch the value over a midnight.

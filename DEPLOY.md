@@ -198,7 +198,7 @@ scenes, your statistics).
    `rainstats_state.json` and `.env` into it, and **remove the old directory** (move it out of `plugins/`).
 7. Add the new lines to `.env` (compare with `.env.sample`): `RS_LAST_..._DAYS` for the windows you want and, if you
    like, `RS_HISTORY_IDX`. Without the lines you get the eight windows you had.
-8. Start Domoticz: `sudo systemctl start domoticz`. The log shows `Rain Statistics 0.0.2 starting ...`,
+8. Start Domoticz: `sudo systemctl start domoticz`. The log shows `Rain Statistics 0.0.3 starting ...`,
    `Loaded the state file ...` and the `Windows: ...` line. The devices keep their IDX and their names; windows you
    newly switched on appear as new devices. A state file that the early build wrote with 1-hour slots is converted to
    15-minute slots when it is read; the rain is kept.
