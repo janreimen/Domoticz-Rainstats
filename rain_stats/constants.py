@@ -18,7 +18,7 @@ DAY = 86400
 
 # -- connection defaults ------------------------------------------------------------------------------------
 DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 8442
+DEFAULT_PORT = 8080
 SCHEMES = ("http", "https")
 MAX_ANSWER_BYTES = 1024 * 1024            # one device
 MAX_LIST_BYTES = 16 * 1024 * 1024         # the device list of the command line tool
@@ -110,19 +110,19 @@ def _window(days: int, rain_unit: int, peak_unit: int, default: bool) -> Window:
 
 
 # Every window that can exist. The first eight are the ones of the first version and are on by default; the others
-# are off until the .env says Y. The units 17 and 18 are the status and info devices, so the later windows start at 19.
+# are off until the .env says Y. The units 17 and 18 are the status and info devices, so the later windows start at 19
+# (rain 19-21, peak rate 22-24).
 WINDOWS = (
     _window(1, 1, 9, True),
     _window(2, 2, 10, True),
     _window(7, 3, 11, True),
     _window(14, 4, 12, True),
-    _window(24, 19, 23, False),
     _window(30, 5, 13, True),
-    _window(60, 20, 24, False),
+    _window(60, 19, 22, False),
     _window(90, 6, 14, True),
-    _window(120, 21, 25, False),
+    _window(120, 20, 23, False),
     _window(180, 7, 15, True),
-    _window(360, 22, 26, False),
+    _window(360, 21, 24, False),
     _window(365, 8, 16, True),
 )
 

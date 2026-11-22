@@ -3,7 +3,7 @@
     <description>
         <h2>Rain Statistics</h2><br/>
         Reads the rain and the rain rate of your weather station from a Domoticz device and shows how much it rained
-        in the last <b>1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360 or 365 days</b> (you choose in the file <tt>.env</tt>
+        in the last <b>1, 2, 7, 14, 30, 60, 90, 120, 180, 360 or 365 days</b> (you choose in the file <tt>.env</tt>
         which of them get devices), and the highest rain rate in each of those windows. The data are kept in a
         fixed-size round-robin archive that survives restarts; nothing grows and nothing has to be cleaned up.
         Read-only; no account and no Python packages needed.<br/><br/>

@@ -550,6 +550,60 @@ class HistoryImport(unittest.TestCase):
         self.assertTrue(any("no finished days" in t for t in self.logs()))
         self.assertEqual(s.errors(), [])
 
+    def test_the_log_gives_the_rain_of_every_window_longer_than_one_day_after_the_import(self):
+        s = Stack(start="2026-11-18 00:00", level=2, history_idx=1161)      # at midnight: the windows hold whole days
+        s.client.history = history_rows(self.TODAY, 300, 1.0)
+        s.start()
+        lines = [t for t in self.logs() if t.startswith("The rain of the windows longer than 1 day after the import")]
+        self.assertEqual(len(lines), 1)
+        self.assertIn(": 2 d 2.0 mm, 7 d 7.0 mm, 14 d 14.0 mm, ", lines[0])
+        self.assertIn("365 d 300.0 mm", lines[0])                           # 300 days of 1 mm: all that Domoticz holds
+        shown = [part.split(" mm")[0].rsplit(" ", 1)[0] for part in lines[0].split(": ", 1)[1].split(", ")]
+        self.assertEqual(shown, ["2 d", "7 d", "14 d", "30 d", "90 d", "180 d", "365 d"])    # every active one above 1 d
+        self.assertEqual(s.errors(), [])
+
+    def test_with_only_the_one_day_window_on_the_history_is_not_needed_and_not_read(self):
+        from rain_stats.constants import WINDOWS
+        one_day = tuple(w for w in WINDOWS if w.days == 1)
+        s = Stack(start="2026-11-18 06:00", level=2, history_idx=1161, windows=one_day)
+        s.client.history = history_rows(self.TODAY, 300, 1.0)
+        s.start()
+        s.step(60, counter=0.0)
+        s.step(60, counter=0.0)
+        self.assertEqual(s.client.history_reads, 0)
+        say = [t for t in self.logs() if "no window longer than 1 day is switched on" in t]
+        self.assertEqual(len(say), 1)                                       # said once
+        self.assertIsNone(store.load(s.state_file, s.wall()).history)
+        s.controller.stop()
+        # a window longer than a day is switched on later: the history is read, once, then
+        again = self.stack(state_file=s.state_file)
+        again.wall.advance(600)
+        again.start()
+        self.assertEqual(again.client.history_reads, 1)
+        self.assertEqual(again.value(RAIN_365D), "300.0")
+
+    def test_a_history_that_adds_nothing_because_the_plugin_knows_every_day_is_done_and_not_asked_again(self):
+        first = Stack(start="2025-10-01 06:00")                             # runs, with no history setting, and stops
+        first.client.counter = 4.0
+        first.start()
+        first.controller.stop()
+        again = Stack(start="2026-11-18 06:00", level=2, state_file=first.state_file, history_idx=1161)
+        again.client.history = history_rows(self.TODAY, 300, 1.0)
+        again.start()
+        self.assertEqual(again.client.history_reads, 1)
+        self.assertTrue(any("nothing to add" in t for t in self.logs()))
+        self.assertFalse(any(t.startswith("The rain of the windows longer than 1 day") for t in self.logs()))
+        mark = store.load(first.state_file, again.wall()).history
+        self.assertEqual((mark.idx, mark.days), (1161, 0))
+        self.assertNotIn("history from", again.value(UNIT_INFO))
+        self.assertEqual(again.errors(), [])
+        again.controller.stop()
+        third = Stack(start="2026-11-18 07:00", level=2, state_file=first.state_file, history_idx=1161)
+        third.client.history = history_rows(self.TODAY, 300, 1.0)
+        third.start()
+        self.assertEqual(third.client.history_reads, 0)                     # once, as asked
+        self.assertTrue(any("was read before" in t for t in self.logs("debug")))
+
     def test_the_rain_the_plugin_collects_afterwards_adds_to_the_history(self):
         s = self.stack()
         s.start()

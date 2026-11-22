@@ -71,14 +71,14 @@ class Creation(Base):
 
     def test_unit_numbers_never_change(self):
         # a unit is never renumbered or reused. The first eight windows have the units of the first build (1-8 rain,
-        # 9-16 peak), the status and the info device 17 and 18, the windows that came later 19-22 and 23-26
+        # 9-16 peak), the status and the info device 17 and 18, the windows that came later 19-21 and 22-24
         rain = {"1d": 1, "2d": 2, "7d": 3, "14d": 4, "30d": 5, "90d": 6, "180d": 7, "365d": 8,
-                "24d": 19, "60d": 20, "120d": 21, "360d": 22}
+                "60d": 19, "120d": 20, "360d": 21}
         self.assertEqual({d.window: d.unit for d in RAIN_DEVICES}, rain)
-        self.assertEqual({d.window: d.unit for d in PEAK_DEVICES}, {k: (v + 8 if v <= 8 else v + 4) for k, v in rain.items()})
+        self.assertEqual({d.window: d.unit for d in PEAK_DEVICES}, {k: (v + 8 if v <= 8 else v + 3) for k, v in rain.items()})
         self.assertEqual([d.unit for d in FIXED_DEVICES], [17, 18])
-        self.assertEqual(sorted(d.unit for d in ALL_DEVICES), list(range(1, 27)))
-        self.assertEqual(len({d.key for d in ALL_DEVICES}), 26)
+        self.assertEqual(sorted(d.unit for d in ALL_DEVICES), list(range(1, 25)))
+        self.assertEqual(len({d.key for d in ALL_DEVICES}), 24)
         self.assertEqual([d.name for d in RAIN_DEVICES][:3], ["Rain 1 d", "Rain 2 d", "Rain 7 d"])
         self.assertEqual([d.name for d in PEAK_DEVICES][:3], ["Peak Rain Rate 1 d", "Peak Rain Rate 2 d", "Peak Rain Rate 7 d"])
 
@@ -86,12 +86,12 @@ class Creation(Base):
         chosen = [w for w in WINDOWS if w.key in ("2d", "60d", "360d")]
         mgr = DeviceManager(dz, lambda: dz.Devices, self.log, clock=self.clock, windows=chosen)
         mgr.ensure_devices()
-        self.assertEqual(sorted(dz.Devices), [2, 10, 17, 18, 20, 22, 24, 26])
-        self.assertEqual(dz.Devices[20].kw["Name"], "Rain 60 d")
-        self.assertEqual(dz.Devices[26].kw["Name"], "Peak Rain Rate 360 d")
+        self.assertEqual(sorted(dz.Devices), [2, 10, 17, 18, 19, 21, 22, 24])
+        self.assertEqual(dz.Devices[19].kw["Name"], "Rain 60 d")
+        self.assertEqual(dz.Devices[24].kw["Name"], "Peak Rain Rate 360 d")
         mgr.show(Stats(0.0, {w.key: float(w.days) for w in WINDOWS}, {w.key: 0.5 * w.days for w in WINDOWS}, None, ()))
-        self.assertEqual((dz.Devices[2].sValue, dz.Devices[20].sValue, dz.Devices[22].sValue), ("2.0", "60.0", "360.0"))
-        self.assertEqual((dz.Devices[10].sValue, dz.Devices[24].sValue), ("1.00", "30.00"))
+        self.assertEqual((dz.Devices[2].sValue, dz.Devices[19].sValue, dz.Devices[21].sValue), ("2.0", "60.0", "360.0"))
+        self.assertEqual((dz.Devices[10].sValue, dz.Devices[22].sValue), ("1.00", "30.00"))
         self.assertEqual(self.errors(), [])                    # a window that is off is not "a device that is missing"
 
     def test_a_window_that_is_switched_off_keeps_its_old_device_untouched(self):
@@ -237,8 +237,8 @@ class ReadOnly(Base):
         self.mgr.restore(99)
 
     def test_ownership_and_names(self):
-        self.assertTrue(self.mgr.owns(1) and self.mgr.owns(18) and self.mgr.owns(26))
-        self.assertFalse(self.mgr.owns(27) or self.mgr.owns(0))
+        self.assertTrue(self.mgr.owns(1) and self.mgr.owns(18) and self.mgr.owns(24))
+        self.assertFalse(self.mgr.owns(25) or self.mgr.owns(26) or self.mgr.owns(0))
         self.assertEqual(self.mgr.name_of(1), "Rain 1 d")
         self.assertEqual(self.mgr.name_of(99), "")
 

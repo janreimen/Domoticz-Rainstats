@@ -13,13 +13,13 @@ WIN = {w.key: w for w in WINDOWS}
 
 class Layout(unittest.TestCase):
     def test_the_windows_the_user_asked_for(self):
-        days = [1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360, 365]
+        days = [1, 2, 7, 14, 30, 60, 90, 120, 180, 360, 365]
         self.assertEqual([w.key for w in WINDOWS], ["%dd" % d for d in days])
         self.assertEqual([w.seconds for w in WINDOWS], [d * 86400 for d in days])
         self.assertEqual([w.label for w in WINDOWS], ["%d d" % d for d in days])
         self.assertEqual([w.env_key for w in WINDOWS], ["RS_LAST_%03d_DAYS" % d for d in days])
         # up to a week the fine ring answers, everything longer the coarse one
-        self.assertEqual([w.tier for w in WINDOWS], ["fine"] * 3 + ["coarse"] * 9)
+        self.assertEqual([w.tier for w in WINDOWS], ["fine"] * 3 + ["coarse"] * 8)
         # the first eight (the windows of the first version) are on by default, the new ones are not
         self.assertEqual([w.key for w in WINDOWS if w.default], ["1d", "2d", "7d", "14d", "30d", "90d", "180d", "365d"])
 

@@ -65,8 +65,9 @@ a valid date or number, with a negative value or with more than 1000 mm is skipp
 
 | When | What |
 |---|---|
-| Asked | once per start, after the first successful reading of the rain device, in a background thread; only while the state file has no record of a history |
-| Never again | when the state file records it (the IDX, the number of days, the time): not at the next reading, not after a restart. Only a deleted state file asks again |
+| Asked | once per start, after the first successful reading of the rain device, in a background thread; only while the state file has no record of a history, and only when a window longer than 1 day is switched on |
+| Never again | when the state file records it (the IDX, the number of days, the time): not at the next reading, not after a restart. It is also recorded when Domoticz had finished days but the plugin knew every one of them. Only a deleted state file asks again |
+| No finished day at all | not recorded (a new device or a wrong IDX): asked again at the next start |
 | IDX unknown to Domoticz | HTTP 400: the plugin says `Is N the IDX of a device of this Domoticz ...` once and does not ask again before the next start |
 | Network problem | tried again at the next reading |
 

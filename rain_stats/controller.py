@@ -134,10 +134,13 @@ class Controller:
             if self.settings.legacy_file:
                 self.log.Basic("RS_LEGACY_FILE is set, but a state file exists: the data file is not imported again")
             mark = state.history
-            if mark is not None and self.settings.history_idx is not None:
+            if mark is not None and self.settings.history_idx is not None and mark.days:
                 self.log.Basic("RS_HISTORY_IDX is set, but the history of IDX %d (%d days from %s) is in the state file: "
                                "it is not read again. To read it again, reset the statistics (delete the state file)"
                                % (mark.idx, mark.days, format_local(mark.first).split(" ")[0]))
+            elif mark is not None and self.settings.history_idx is not None:
+                self.log.Basic("RS_HISTORY_IDX is set, but the history of IDX %d was read before: the plugin had its own "
+                               "data for every day, nothing was added. It is not read again" % mark.idx)
         else:
             self.state = State()
             if self.settings.legacy_file and not os.path.exists(path):
@@ -248,6 +251,11 @@ class Controller:
         if (idx is None or self.state.history is not None or self._history_closed or self._history_thread is not None
                 or self.state.since is None):
             return
+        if not any(w.days > 1 for w in self.settings.windows):
+            self._history_closed = True
+            self.log.Log("RS_HISTORY_IDX is set, but no window longer than 1 day is switched on (RS_LAST_..._DAYS): "
+                         "the history is not needed and not read. It is read, once, at the first start after one is on")
+            return
         self.log.Basic("Reading the daily rain history of IDX %d (once)" % idx)
         self._history_thread = self.spawn(self._history_in_thread)
 
@@ -280,9 +288,19 @@ class Controller:
         self._history_closed = True                     # done (or nothing to add: not asked again in this run)
         self.log.Log(describe_history(result, idx))
         if result.days:
+            self.log.Log(self._window_sums())
+        if self.state.history is not None:
             self._dirty = True
-            self._save(force=True)                      # from now on the state file says: the history is in
+            self._save(force=True)                      # from now on the state file says: the history is done
         self._show_stats()
+
+    def _window_sums(self) -> str:
+        """The rain of every window longer than one day, as the statistics hold it now: what the import made of them."""
+        mark = self.state.history
+        stats = compute(self.state.archive, self.wall_clock(), self.state.since, self.settings.windows,
+                        None if mark is None else mark.from_day)
+        return "The rain of the windows longer than 1 day after the import: %s" % ", ".join(
+            "%s %s mm" % (w.label, number_text(stats.rain.get(w.key, 0.0), 1)) for w in self.settings.windows if w.days > 1)
 
     # -- the rain -------------------------------------------------------------------------------------------
     def _apply(self, reading: Reading) -> None:
@@ -344,7 +362,7 @@ class Controller:
         now = self.wall_clock()
         mark = self.state.history
         stats = compute(self.state.archive, now, self.state.since, self.settings.windows,
-                        None if mark is None else mark.first)
+                        None if mark is None else mark.from_day)
         self.stats = stats
         self.devices.show(stats)
         self.devices.set_info(self._info(stats))
@@ -359,7 +377,7 @@ class Controller:
         text = "OK %s: %s mm/h; %s" % (format_local(stats.now, with_date=False), number_text(self.rate, 1),
                                        self._since_text(stats.since))
         mark = self.state.history
-        if mark is not None:
+        if mark is not None and mark.days:
             text += "; history from %s" % format_local(mark.first).split(" ")[0]
         if stats.partial:
             text += "; windows from %s on are partial" % stats.partial[0]

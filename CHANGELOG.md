@@ -13,7 +13,7 @@ changes that came out of that run, see [what is verified and what is not](README
 
 ### Added
 - **You choose the windows.** One line per window in `.env`, `RS_LAST_001_DAYS=Y` ... `RS_LAST_365_DAYS=N`, for
-  1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360 and 365 days. A window that is switched off gets neither its rain device
+  1, 2, 7, 14, 30, 60, 90, 120, 180, 360 and 365 days. A window that is switched off gets neither its rain device
   nor its peak rain rate device: the devices are only created when the line says `Y`. The first eight windows of the
   early build (1, 2, 7, 14, 30, 90, 180 and 365 days) are `Y` by default, so an installation without the lines keeps
   what it had. A device that exists is never deleted by the plugin.
@@ -21,11 +21,13 @@ changes that came out of that run, see [what is verified and what is not](README
   Domoticz keeps of that device for the last year (the *Last year* graph) **once**, and add it to the days before the
   plugin started collecting, so the long windows are complete from the first day. The days the plugin collected itself
   are never overwritten. The state file records that it was done and the device is never asked again, however often
-  Domoticz or the hardware is restarted; only a deleted state file brings the import back. The history has days, not
+  Domoticz or the hardware is restarted; only a deleted state file brings the import back. It is only read when a
+  window longer than 1 day is switched on, it is also marked as done when Domoticz had days but the plugin knew all of
+  them already, and the log gives the rain of every active window above 1 day right after the import. The history has days, not
   hours, so it is spread evenly over each day, and it has no rain rates (the peak rates stay partial). The command line
   tool shows what Domoticz would answer: `python3 -m rain_stats --history <IDX>`.
 - **`Rain Stats Info` says when a window is partial** and since when the history reaches back.
-- **Statistics over 1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360 and 365 days**, stored round-robin: a fine ring of 2016
+- **Statistics over 1, 2, 7, 14, 30, 60, 90, 120, 180, 360 and 365 days**, stored round-robin: a fine ring of 2016
   slots of 5 minutes (a week) answers the windows up to 7 days, a coarse ring of 35040 slots of 15 minutes (a year)
   the longer ones. Every reading is added to both. Rain is summed, the rain rate is kept as a maximum, per slot.
 - **A window is the last N days, not a count of whole slots.** The rain of a window is its whole slots plus the slot
@@ -40,7 +42,7 @@ changes that came out of that run, see [what is verified and what is not](README
 - **Devices:** `Rain 1 d` ... `Rain 365 d` and `Peak Rain Rate 1 d` ... `365 d` (Custom Sensors, mm and mm/h; the peak
   devices are not created with the setting *Statistics* = *Rain only*), `Rain Stats Status` (unit 17) and
   `Rain Stats Info` (unit 18). Created *in use*, with their unit; read-only. The unit numbers are frozen: units 1-16
-  are the eight default windows, 19-26 the four that are off by default.
+  are the eight default windows, 19-24 the three that are off by default (60, 120 and 360 days).
 - **A source of any weather station:** the plugin reads a device of Domoticz through the JSON API (counter and rain
   rate of a *Rain* device, or the value of a sensor that shows mm; optionally a separate rate device).
 - **Counters that reset at midnight ("rain today") and counters that never do ("total")**, with the handling of

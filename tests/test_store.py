@@ -205,6 +205,16 @@ class StoreTests(unittest.TestCase):
                                                                    "last": NOW - 86400, "days": 340, "at": NOW})
         self.assertEqual(store.load(self.path, NOW).history, state.history)
 
+    def test_a_marker_of_a_history_that_added_nothing_survives_saving_and_loading(self):
+        from rain_stats.store import HistoryMark
+        state = filled_state()
+        state.history = HistoryMark(1161, NOW - 400 * 86400, NOW - 400 * 86400, 0, NOW)
+        store.save(self.path, state, NOW)
+        loaded = store.load(self.path, NOW)
+        self.assertEqual(loaded.history, state.history)
+        self.assertEqual(loaded.history.days, 0)
+        self.assertIsNone(loaded.history.from_day)
+
     def test_a_file_without_the_marker_has_no_history(self):
         store.save(self.path, filled_state(), NOW)
         self.assertNotIn("history", helpers.load_json(self.path))

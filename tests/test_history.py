@@ -138,6 +138,44 @@ class Applying(unittest.TestCase):
         self.assertEqual((result.days, result.first, result.last), (0, None, None))
         self.assertIsNone(state.history)                                # a young sensor: ask again at the next start
         self.assertIn("no finished days", describe(result, 1161))
+        self.assertIn("asked again at the next start", describe(result, 1161))
+
+    def test_a_history_the_plugin_knows_completely_is_done_and_marked_without_adding_anything(self):
+        # the plugin ran for more than a year (or an imported file covers the year): every finished day of Domoticz is
+        # known already. Nothing is added, and the history is marked as done, so that it is not asked for again
+        since = TODAY - 400 * 86400
+        state = fresh_state(since)
+        state.archive.add_spread(since, NOW, 40.0)
+        before = compute(state.archive, NOW, since).rain["365d"]
+        result = apply_history(state, 1161, days_before(TODAY, 365, 1.0), NOW)
+        self.assertEqual((result.days, result.mm, result.first, result.last), (0, 0.0, None, None))
+        self.assertEqual((result.known, result.before), (365, 366))                 # 365 finished days and today
+        self.assertEqual(state.history, HistoryMark(1161, since, since, 0, NOW))
+        self.assertIsNone(state.history.from_day)                                   # it reaches back no further
+        self.assertEqual(compute(state.archive, NOW, since, WINDOWS, state.history.from_day).rain["365d"], before)
+        text = describe(result, 1161)
+        self.assertIn("365 finished day(s)", text)
+        self.assertIn("nothing to add", text)
+        self.assertIn("not read again", text)
+
+    def test_some_days_added_and_some_known_gives_a_marker_of_the_added_ones(self):
+        since = local("2026-11-19 00:00")
+        state = fresh_state(since)
+        result = apply_history(state, 1161, days_before(TODAY, 10, 1.0), NOW)
+        self.assertEqual((result.days, result.known, result.before), (8, 2, 3))     # 11-19 and 11-20 are known, today is not over
+        self.assertEqual(state.history.days, 8)
+        self.assertEqual(state.history.from_day, state.history.first)
+
+    def test_an_answer_with_no_finished_day_at_all_is_never_marked_as_done(self):
+        # a new device or a wrong IDX: marking it would need a deleted state file to try again
+        state = fresh_state()
+        result = apply_history(state, 1161, [{"d": day_text(TODAY), "mm": "0.0"}], NOW)
+        self.assertEqual((result.days, result.known), (0, 0))
+        self.assertIsNone(state.history)
+        state = fresh_state()
+        result = apply_history(state, 1161, [], NOW)
+        self.assertEqual((result.days, result.known, result.before), (0, 0, 0))
+        self.assertIsNone(state.history)
 
     def test_without_a_first_reading_nothing_can_be_added(self):
         with self.assertRaises(ValueError):

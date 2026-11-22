@@ -277,27 +277,27 @@ class DocumentationTests(unittest.TestCase):
         readme = read("README.md")
         self.assertIn("| 1-8 | Rain 1 d, 2 d, 7 d, 14 d, 30 d, 90 d, 180 d, 365 d |", readme)
         self.assertIn("| 9-16 | Peak Rain Rate 1 d ... 365 d |", readme)
-        self.assertIn("| 19-22 | Rain 24 d, 60 d, 120 d, 360 d |", readme)
-        self.assertIn("| 23-26 | Peak Rain Rate 24 d, 60 d, 120 d, 360 d |", readme)
+        self.assertIn("| 19-21 | Rain 60 d, 120 d, 360 d |", readme)
+        self.assertIn("| 22-24 | Peak Rain Rate 60 d, 120 d, 360 d |", readme)
         self.assertIn("| %d | Rain Stats Status |" % c.UNIT_STATUS, readme)
         self.assertIn("| %d | Rain Stats Info |" % c.UNIT_INFO, readme)
         # the units of the table are the units of the code
         default = [w for w in c.WINDOWS if w.default]
         self.assertEqual(sorted(w.rain_unit for w in default), list(range(1, 9)))
         self.assertEqual(sorted(w.peak_unit for w in default), list(range(9, 17)))
-        self.assertEqual(sorted(w.rain_unit for w in c.WINDOWS if not w.default), list(range(19, 23)))
-        self.assertEqual(sorted(w.peak_unit for w in c.WINDOWS if not w.default), list(range(23, 27)))
-        self.assertEqual(len(c.ALL_DEVICES), 26)
-        self.assertEqual(len(c.RAIN_DEVICES) + len(c.PEAK_DEVICES) + len(c.FIXED_DEVICES), 26)
+        self.assertEqual(sorted(w.rain_unit for w in c.WINDOWS if not w.default), list(range(19, 22)))
+        self.assertEqual(sorted(w.peak_unit for w in c.WINDOWS if not w.default), list(range(22, 25)))
+        self.assertEqual(len(c.ALL_DEVICES), 24)
+        self.assertEqual(len(c.RAIN_DEVICES) + len(c.PEAK_DEVICES) + len(c.FIXED_DEVICES), 24)
         self.assertEqual(2 * len(default) + len(c.FIXED_DEVICES), 18)
         self.assertIn("18 devices are created by default", readme)
 
     def test_the_readme_names_every_window_and_the_rings_as_the_code_has_them(self):
         readme = read("README.md")
-        self.assertIn("1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360 and 365 days", readme)
-        self.assertEqual([w.days for w in c.WINDOWS], [1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360, 365])
-        self.assertEqual([w.label for w in c.WINDOWS], ["1 d", "2 d", "7 d", "14 d", "24 d", "30 d", "60 d", "90 d",
-                                                        "120 d", "180 d", "360 d", "365 d"])
+        self.assertIn("1, 2, 7, 14, 30, 60, 90, 120, 180, 360 and 365 days", readme)
+        self.assertEqual([w.days for w in c.WINDOWS], [1, 2, 7, 14, 30, 60, 90, 120, 180, 360, 365])
+        self.assertEqual([w.label for w in c.WINDOWS], ["1 d", "2 d", "7 d", "14 d", "30 d", "60 d", "90 d", "120 d",
+                                                        "180 d", "360 d", "365 d"])
         self.assertEqual([w.days for w in c.WINDOWS if w.default], [1, 2, 7, 14, 30, 90, 180, 365])
         for window in c.WINDOWS:
             # one row of "Choose the windows" per window: the .env line, the default and the two units
@@ -311,7 +311,7 @@ class DocumentationTests(unittest.TestCase):
         self.assertIn("35040 slots × 15 min = 365 days", readme)
         self.assertIn("coarse ring: 35040 slots", readme)
         self.assertIn("answers 1 d, 2 d, 7 d ", readme)
-        self.assertIn("answers 14 d, 24 d, 30 d, 60 d, 90 d, 120 d, 180 d, 360 d, 365 d", readme)
+        self.assertIn("answers 14 d, 30 d, 60 d, 90 d, 120 d, 180 d, 360 d, 365 d", readme)
         self.assertIn("allowed %d to %d" % (c.MIN_INTERVAL, c.MAX_INTERVAL), readme)
         self.assertIn("Default %d," % c.DEFAULT_INTERVAL, readme)
 
@@ -327,6 +327,11 @@ class DocumentationTests(unittest.TestCase):
                          "Reading the rain history failed", "Cannot use the rain history",
                          "Reading the rain history did not end within", "It is tried again at the next reading",
                          "is in the state file: ", "it is not read again",
+                         "The rain of the windows longer than 1 day after the import",
+                         "no window longer than 1 day is switched on",
+                         "and the plugin has its own data for all of them",
+                         "nothing was added, and the history is asked again",
+                         "was read before: the plugin had its own",
                          "does this Domoticz know the graph command",
                          "must be Y or N, got", "All the windows are switched off: at least one of the lines"):
             self.assertIn(fragment, code, "no longer in the code: " + fragment)

@@ -1,7 +1,7 @@
 # Domoticz-Rainstats
 
 A [Domoticz](https://www.domoticz.com) plugin that turns the rain counter of your weather station into **statistics
-over the last 1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360 and 365 days**, of which you choose the ones you want: how
+over the last 1, 2, 7, 14, 30, 60, 90, 120, 180, 360 and 365 days**, of which you choose the ones you want: how
 much it rained, and how hard it rained at most. The numbers are kept in a **round-robin archive** of fixed size that
 survives restarts. It replaces the dzVents script *RainStats V2.6* and can take over its data.
 
@@ -145,13 +145,12 @@ neither.
 | `RS_LAST_002_DAYS` | 2 days (48 h) | Y | 2, 10 |
 | `RS_LAST_007_DAYS` | 7 days (168 h) | Y | 3, 11 |
 | `RS_LAST_014_DAYS` | 14 days | Y | 4, 12 |
-| `RS_LAST_024_DAYS` | 24 days | N | 19, 23 |
 | `RS_LAST_030_DAYS` | 30 days | Y | 5, 13 |
-| `RS_LAST_060_DAYS` | 60 days | N | 20, 24 |
+| `RS_LAST_060_DAYS` | 60 days | N | 19, 22 |
 | `RS_LAST_090_DAYS` | 90 days | Y | 6, 14 |
-| `RS_LAST_120_DAYS` | 120 days | N | 21, 25 |
+| `RS_LAST_120_DAYS` | 120 days | N | 20, 23 |
 | `RS_LAST_180_DAYS` | 180 days | Y | 7, 15 |
-| `RS_LAST_360_DAYS` | 360 days | N | 22, 26 |
+| `RS_LAST_360_DAYS` | 360 days | N | 21, 24 |
 | `RS_LAST_365_DAYS` | 365 days | Y | 8, 16 |
 
 Without a `.env`, or without a line, the default of the table is in force, which is the eight windows of the first
@@ -173,8 +172,8 @@ Devices*. Set it to `Y` again and they are updated again. Changes take effect wh
 | 9-16 | Peak Rain Rate 1 d ... 365 d | the highest rain rate seen in the window, in mm/h (two decimals) |
 | 17 | Rain Stats Status | On while the rain device can be read, Off while it cannot |
 | 18 | Rain Stats Info | the last reading, the rain rate, since when data are collected, and which windows are still partial |
-| 19-22 | Rain 24 d, 60 d, 120 d, 360 d | only with `RS_LAST_024_DAYS=Y` and so on |
-| 23-26 | Peak Rain Rate 24 d, 60 d, 120 d, 360 d | the same, and not with *Rain only* |
+| 19-21 | Rain 60 d, 120 d, 360 d | only with `RS_LAST_060_DAYS=Y` and so on |
+| 22-24 | Peak Rain Rate 60 d, 120 d, 360 d | the same, and not with *Rain only* |
 
 All devices are read-only; a command is answered with the real state. They are created *in use*, so nothing has to be
 added by hand, and the sensors carry their unit (`mm`, `mm/h`) so that Domoticz draws the right axes. Domoticz names
@@ -193,7 +192,7 @@ reading ──> counter logic ──> rain between two readings ──> spread o
                           ┌───────────────────────────────────────┴───────────────┐
                           ▼                                                       ▼
         fine ring: 2016 slots × 5 min = 7 days            coarse ring: 35040 slots × 15 min = 365 days
-        answers 1 d, 2 d, 7 d                             answers 14 d, 24 d, 30 d, 60 d, 90 d, 120 d, 180 d, 360 d, 365 d
+        answers 1 d, 2 d, 7 d                             answers 14 d, 30 d, 60 d, 90 d, 120 d, 180 d, 360 d, 365 d
 ```
 
 Each ring comes twice: one holds the **sum of the rain** per slot, one the **highest rain rate** per slot.
@@ -246,38 +245,79 @@ A new installation knows nothing about the rain before its first reading, so the
 a year. If Domoticz has kept the daily rain of a rain device (every Domoticz does for a device of type *Rain*: it is
 the *Last year* graph of the device), the plugin can read those days **once** and complete its statistics with them.
 
-**How to use it.** Find the IDX of the rain device whose history you want (*Setup > Devices*, column *Idx*, or
-`python3 -m rain_stats --find`). Look at what Domoticz would give, without changing anything:
+**How to use it, exactly.**
 
-```sh
-python3 -m rain_stats --history 1161
-```
+1. Find the IDX of the rain device whose history you want (*Setup > Devices*, column *Idx*, or
+   `python3 -m rain_stats --find`). It can be the rain device of the hardware page or another one (for example an older
+   sensor that was replaced).
+2. Look at what Domoticz would give and what the windows would say, without changing anything:
 
-then put the IDX into `.env` as `RS_HISTORY_IDX=1161` and restart the hardware. It can be the rain device of the
-hardware page or another one (for example an older sensor that was replaced).
+   ```sh
+   python3 -m rain_stats --history 1161
+   ```
+
+3. Write the IDX into `.env` (next to `plugin.py`), together with the windows you want. The history is used for every
+   window **longer than 1 day** that is `Y`:
+
+   ```
+   RS_HISTORY_IDX=1161
+   RS_LAST_001_DAYS=Y
+   RS_LAST_002_DAYS=Y
+   RS_LAST_007_DAYS=Y
+   RS_LAST_014_DAYS=Y
+   RS_LAST_030_DAYS=Y
+   RS_LAST_060_DAYS=N
+   RS_LAST_090_DAYS=Y
+   RS_LAST_120_DAYS=N
+   RS_LAST_180_DAYS=Y
+   RS_LAST_360_DAYS=N
+   RS_LAST_365_DAYS=Y
+   ```
+
+4. Add the hardware (or restart it). Best **before the first start**: the import completes the days *before* the
+   plugin's own data, and those begin at the plugin's first reading. (Added later, it fills the days before the data
+   the plugin has collected itself, so nothing is lost either.)
+5. Check the log (*Setup > Log*): `Reading the daily rain history of IDX 1161 (once)`, then
+   `Imported the daily rain history of IDX 1161: N days from DATE to DATE, X mm`, then
+   `The rain of the windows longer than 1 day after the import: 2 d ... mm, 7 d ... mm, ...`: the rain of every
+   active window above 1 day, as the statistics hold it now.
+6. Leave the line in `.env`: it does no harm. The state file says that the history was read, so it is not read again.
 
 **What happens.**
 
 1. The plugin starts as usual and makes its first reading. Only then it knows where its own data begin.
 2. It asks Domoticz **one** question, in the background: `type=command&param=graph&sensor=rain&idx=1161&range=year`,
-   the daily rain totals of the last 365 days. The log says `Reading the daily rain history of IDX 1161 (once)`.
+   the daily rain totals from the same date a year ago to today (365 finished days and today). The log says
+   `Reading the daily rain history of IDX 1161 (once)`. It does so only when a window longer than 1 day is switched
+   on; with only the 1-day window on, nothing is read, the log says so once, and the history is read, once, at the first
+   start after a longer window is switched on.
 3. Every finished day **before the first midnight of the data the plugin collected itself** is added to the archive.
    Days the plugin knows itself are never touched or doubled. The day the plugin started is its own: the history has
    no hours, so it is not used for that day.
 4. The state file is written at once and carries a marker with the IDX, the days and the time. The log says
-   `Imported the daily rain history of IDX 1161: N days from DATE to DATE, X mm (...)`.
+   `Imported the daily rain history of IDX 1161: N days from DATE to DATE, X mm (...)` and, in the next line, the rain
+   of every active window above 1 day (`The rain of the windows longer than 1 day after the import: 2 d 12.3 mm, ...`).
 5. **From then on the device is never asked again**: not at the next heartbeat, not after a restart of the hardware or
    of Domoticz, as long as the state file holds the data (the statistics are the values in the devices; the state file is
    where they live). A later start only says once, at Basic level, that `RS_HISTORY_IDX is set, but the history of IDX
-   1161 (N days from DATE) is in the state file: it is not read again`. Only a deleted state file
-   (see the FAQ, *Can I reset the statistics?*) brings the import back, because then there is nothing left to complete.
+   1161 (N days from DATE) is in the state file: it is not read again`. The same holds when Domoticz had finished days
+   but the plugin knew every one of them already (it ran for a year, or the old script's file covers them): nothing is
+   added, the marker is written all the same (`... was read before: the plugin had its own data for every day, nothing
+   was added. It is not read again`). Only a deleted state file (see the FAQ, *Can I reset the statistics?*) brings the
+   import back, because then there is nothing left to complete.
 
 **What it can and cannot do.**
 
-* **A day is a day.** The history has one total per day, no hours. Each day is spread evenly over its 24 hours. The
-  windows of 30 days and longer do not care. The windows of 1, 2 and 7 days are an estimate for the part that comes from
-  the history, and exact as soon as the plugin has collected for that long. *Rain Stats Info* says
-  `history from DATE`, and `windows from ... are partial` for what is still short of data.
+* **A day is a day.** The history has one total per day, no hours, and Domoticz states it with one decimal (a sensor
+  that counts in tenths of a millimetre loses nothing by that). Each day is spread evenly over its 24 hours, so a window
+  adds the whole days it covers exactly, and counts the one day at its edge in proportion to the part that lies
+  inside. **That one day is an estimate**: wrong by at most the rain of that day, and by less when the rain was
+  spread evenly. For the windows of 2 and 7 days that is a noticeable part of the total, for 90 days and more a small
+  one. Every day that passes replaces it by the plugin's own 5-minute data: a window is exact once the plugin has
+  collected for as long as the window is long. *Rain Stats Info* says `history from DATE`, and `windows from ... are
+  partial` for what is still short of data.
+* **The window of 1 day** is not made from the history: only the part of it that lies in the last day before the plugin
+  started (the evening of yesterday) is. For a *daily* counter the amount of rain of today comes from the counter itself, exactly.
 * **No peak rain rates.** The history has no rates, so the peak devices only know the time the plugin has run.
   *Rain Stats Info* says `peaks from ... are partial`.
 * **A year.** Domoticz keeps one year of days. A 365 d window is complete from the first day the history covers; the
@@ -287,7 +327,10 @@ hardware page or another one (for example an older sensor that was replaced).
 * **If Domoticz cannot answer**, the log says why once (`Reading the rain history failed: ...`). A network problem
   is tried again at the next reading; a refusal (wrong IDX, a Domoticz that does not know the graph command, an answer that
   makes no sense) is not repeated until the next start. The statistics are not affected either way.
-* **If there is nothing to add** (all days are known already), nothing is written, and the next start asks once more.
+* **If Domoticz has no finished day at all** (a new device, a wrong IDX), nothing is written and the history is *not*
+  marked as done, so it is asked again at the next start: a wrong IDX never costs you the one chance.
+* **Together with `RS_LEGACY_FILE`** the old script's data are read first, and the history fills only the days before the
+  first day of that file. Use the history alone unless you want the hourly data of the script's last 7 days.
 * It reads, it never writes to Domoticz. It uses the same address and login as the rain device; the request is limited
   in size like every other.
 
@@ -412,6 +455,10 @@ Set *Debug* to **Basic** first, **Verbose** shows every reading. The messages be
 | `Reading the rain history failed: ... Is 1161 the IDX of a device of this Domoticz (Setup > Devices, column Idx), and does this Domoticz know the graph command` | `RS_HISTORY_IDX` is wrong, or this Domoticz does not answer the graph command. Not repeated before the next start; check with `python3 -m rain_stats --history IDX` |
 | `Reading the rain history failed: ... . It is tried again at the next reading` | Domoticz could not be reached for the history (network problem); it is asked again, once per reading, until it worked |
 | `Cannot use the rain history: ...` | Domoticz answered, but the answer cannot be used (the plugin has no data of its own yet, or the rows are nonsense). Not repeated before the next start |
+| `RS_HISTORY_IDX is set, but no window longer than 1 day is switched on (RS_LAST_..._DAYS): the history is not needed and not read` | only the 1-day window is `Y`: nothing to complete. Switch a longer window on, restart the hardware: the history is read, once, then |
+| `The rain of the windows longer than 1 day after the import: 2 d 12.3 mm, 7 d ...` | informational, once after the import: what every active window above 1 day shows now |
+| `Domoticz holds N finished day(s) of rain for IDX 1161 and the plugin has its own data for all of them: there is nothing to add` | informational: the plugin knew every day already; the history is marked as done and not read again |
+| `Domoticz holds no finished days of rain for IDX 1161: nothing was added, and the history is asked again at the next start` | the device has no history yet, or the IDX is not a rain device: check it with `python3 -m rain_stats --history IDX` |
 | `Reading the rain history did not end within 5 s; it is abandoned` | Domoticz stopped the hardware while the history was still being read; harmless, the next start reads it |
 | `Imported the daily rain history of IDX 1161: N days from DATE to DATE, X mm (...)` | the history was read and added; informational, said once. The state file says so from now on |
 | `RS_HISTORY_IDX is set, but the history of IDX 1161 (N days from DATE) is in the state file: it is not read again` | informational, Basic level: the history is in the statistics already. Delete the state file to read it again |
@@ -443,7 +490,7 @@ other times. A difference of a few tenths of a millimetre at the edge is to be e
 a script, another plugin). That keeps one source of truth. An MQTT source is on the [roadmap](ROADMAP.md).
 
 **Can I have a window that is not in the list, for example 45 days?** The windows and their unit numbers are fixed, so that
-scripts keep working; the list is 1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360 and 365 days, and you choose in `.env` which
+scripts keep working; the list is 1, 2, 7, 14, 30, 60, 90, 120, 180, 360 and 365 days, and you choose in `.env` which
 of them exist. Another length is a new row in `rain_stats/constants.py` (see [CONTRIBUTING.md](CONTRIBUTING.md)). 168 h *is*
 7 days, 24 h is 1 day.
 

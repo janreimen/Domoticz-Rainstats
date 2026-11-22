@@ -28,8 +28,13 @@ class HistoryMark(NamedTuple):
     idx: int                  # the device that was read
     first: float              # start of the first day imported
     last: float               # end of the last day imported
-    days: int                 # how many days were imported
+    days: int                 # how many days were imported (0: Domoticz had days, but the plugin knew all of them)
     at: float                 # when
+
+    @property
+    def from_day(self) -> Optional[float]:
+        """The start of the first day the import added; None when it added none."""
+        return self.first if self.days else None
 
 
 class State:

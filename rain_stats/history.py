@@ -61,6 +61,7 @@ class HistoryResult(NamedTuple):
     skipped: int                  # rows of the answer that were not usable
     before: int                   # days that were not added because the plugin has its own data for them (or they are
                                   # not over yet)
+    known: int = 0                # of those, the finished days: the plugin has its own data for them
 
 
 def apply_history(state: State, idx: int, rows: Iterable[Any], now: float) -> HistoryResult:
@@ -72,12 +73,14 @@ def apply_history(state: State, idx: int, rows: Iterable[Any], now: float) -> Hi
         raise ValueError("the plugin has not collected anything yet: the history is added after the first reading")
     days, skipped = parse_days(rows)
     limit = local_midnight(state.since)
-    added = left_out = 0
+    added = left_out = known = 0
     total = 0.0
     first = last = None
     for day in days:
         if day.end > limit or day.end > now:
             left_out += 1
+            if day.end <= now:
+                known += 1                      # a finished day that the plugin knows itself: proof of a real history
             continue
         added += 1
         total += day.mm
@@ -85,15 +88,24 @@ def apply_history(state: State, idx: int, rows: Iterable[Any], now: float) -> Hi
         first = day.start if first is None else first
         last = day.end
     if added:
-        state.history = HistoryMark(idx, first, last, added, now)        # nothing to add: nothing was read, ask again later
-    return HistoryResult(added, total, first, last, skipped, left_out)
+        state.history = HistoryMark(idx, first, last, added, now)
+    elif known:
+        # Domoticz has finished days and the plugin knows every one of them already (it ran for a year, or an imported
+        # file covers them): there is nothing to add and nothing to wait for, so it is done and not asked again.
+        # An answer without any finished day (a new device, a wrong IDX) is NOT marked: it may be asked again.
+        state.history = HistoryMark(idx, state.since, state.since, 0, now)
+    return HistoryResult(added, total, first, last, skipped, left_out, known)
 
 
 def describe(result: HistoryResult, idx: int) -> str:
     """One line for the log and the command line tool."""
+    if not result.days and result.known:
+        return "Domoticz holds %d finished day(s) of rain for IDX %d and the plugin has its own data for all of them: " \
+               "there is nothing to add, and the history is not read again (%d row(s) skipped)" % (
+                   result.known, idx, result.skipped)
     if not result.days:
-        return "Domoticz holds no finished days of rain for IDX %d that the plugin does not know already (%d day(s) " \
-               "left out, %d row(s) skipped)" % (idx, result.before, result.skipped)
+        return "Domoticz holds no finished days of rain for IDX %d: nothing was added, and the history is asked again " \
+               "at the next start (%d row(s) skipped)" % (idx, result.skipped)
     return "Imported the daily rain history of IDX %d: %d days from %s to %s, %.1f mm (%d day(s) left out because the " \
            "plugin has its own data for them, %d row(s) skipped)" % (
                idx, result.days, _day(result.first), _day(result.last - 1), result.mm, result.before, result.skipped)

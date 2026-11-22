@@ -221,25 +221,25 @@ class Windows(Base):
                          ["1d", "7d", "14d", "30d", "60d", "90d", "180d"])
 
     def test_the_new_windows_come_in_their_place_in_the_order_of_the_days(self):
-        self.assertEqual(self.keys("RS_LAST_024_DAYS=Y\nRS_LAST_120_DAYS=Y\nRS_LAST_360_DAYS=Y\n"),
-                         ["1d", "2d", "7d", "14d", "24d", "30d", "90d", "120d", "180d", "360d", "365d"])
+        self.assertEqual(self.keys("RS_LAST_060_DAYS=Y\nRS_LAST_120_DAYS=Y\nRS_LAST_360_DAYS=Y\n"),
+                         ["1d", "2d", "7d", "14d", "30d", "60d", "90d", "120d", "180d", "360d", "365d"])
 
     def test_y_and_n_are_written_the_way_people_write_them(self):
         text = "\n".join(["RS_LAST_001_DAYS=y", "RS_LAST_002_DAYS=no", "RS_LAST_007_DAYS=Yes", "RS_LAST_014_DAYS=FALSE",
-                          "RS_LAST_024_DAYS=true", "RS_LAST_030_DAYS=0", "RS_LAST_060_DAYS=1", "RS_LAST_090_DAYS='N'",
+                          "RS_LAST_030_DAYS=0", "RS_LAST_060_DAYS=true", "RS_LAST_090_DAYS='N'",
                           "RS_LAST_120_DAYS=Y   # a comment", "RS_LAST_180_DAYS=off", "RS_LAST_360_DAYS=on",
                           "RS_LAST_365_DAYS= n "])
-        self.assertEqual(self.keys(text), ["1d", "7d", "24d", "60d", "120d", "360d"])
+        self.assertEqual(self.keys(text), ["1d", "7d", "60d", "120d", "360d"])
 
     def test_a_line_without_a_value_keeps_the_default(self):
-        self.assertEqual(self.keys("RS_LAST_001_DAYS=\nRS_LAST_024_DAYS=\n"), self.keys())
+        self.assertEqual(self.keys("RS_LAST_001_DAYS=\nRS_LAST_060_DAYS=\n"), self.keys())
 
     def test_anything_but_y_or_n_is_refused_and_the_key_is_named(self):
         for bad in ("maybe", "2", "yy", "Y N"):
             self.refused("RS_LAST_030_DAYS must be Y or N, got %r" % bad, "RS_LAST_030_DAYS=%s\n" % bad)
 
     def test_at_least_one_window_must_stay(self):
-        text = "".join("RS_LAST_%03d_DAYS=N\n" % d for d in (1, 2, 7, 14, 24, 30, 60, 90, 120, 180, 360, 365))
+        text = "".join("RS_LAST_%03d_DAYS=N\n" % d for d in (1, 2, 7, 14, 30, 60, 90, 120, 180, 360, 365))
         self.refused("All the windows are switched off", text)
 
     def test_a_single_window_is_enough(self):
@@ -255,6 +255,15 @@ class Windows(Base):
         self.assertEqual(len(s.warnings), 2)
         self.assertIn("unknown setting RS_LAST_01_DAYS ignored (did you mean RS_LAST_0", s.warnings[0])
         self.assertEqual([w.key for w in s.windows], [w.key for w in self.settings().windows])      # nothing changed
+
+    def test_a_line_for_a_window_that_does_not_exist_is_only_a_warning(self):
+        # an early copy of .env.sample had a line for 24 days: it is ignored, the other lines still count
+        s = self.settings("RS_LAST_024_DAYS=Y\nRS_LAST_060_DAYS=Y\n")
+        self.assertEqual(len(s.warnings), 1)
+        self.assertIn("unknown setting RS_LAST_024_DAYS ignored", s.warnings[0])
+        self.assertEqual([w.key for w in s.windows], [w.key for w in self.settings("RS_LAST_060_DAYS=Y\n").windows])
+        self.assertIn("60d", [w.key for w in s.windows])
+        self.assertNotIn("24d", [w.key for w in s.windows])
 
 
 class HistoryIdx(Base):

@@ -103,7 +103,7 @@ def _print_stats(stats: Stats, windows: Tuple[Window, ...], out) -> None:
 def _show_state(state: State, now: float, as_json: bool, out, extra: Optional[dict] = None) -> int:
     windows = _windows()
     mark = state.history
-    stats = compute(state.archive, now, state.since, windows, None if mark is None else mark.first)
+    stats = compute(state.archive, now, state.since, windows, None if mark is None else mark.from_day)
     if as_json:
         json.dump(dict(extra or {}, since=state.since, rain_from=stats.rain_from, windows=_stats_rows(stats, windows)),
                   out, indent=2)

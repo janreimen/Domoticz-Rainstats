@@ -110,7 +110,8 @@ loads every `plugin.py` it finds one level below `plugins/`).
    `RS_LAST_365_DAYS=N`; only the windows set to `Y` get devices. Without a `.env` the eight windows 1, 2, 7, 14, 30,
    90, 180 and 365 days are created.
 4. Want the long windows filled from the first day? Set `RS_HISTORY_IDX` in `.env` to the IDX of a rain device whose
-   daily history Domoticz has kept (see the [README](README.md#the-one-time-history-set-up)). It is read once.
+   daily history Domoticz has kept (see the [README](README.md#the-one-time-history-set-up)), **before** you add the
+   hardware. It is read once, and only when a window longer than 1 day is `Y`.
 5. Coming from the dzVents script? Set `RS_LEGACY_FILE` in `.env` **before** you add the hardware, see the
    [README](README.md#replacing-the-dzvents-script).
 6. *Add*. The log shows `Rain Statistics X.Y.Z starting ...`, the line `Windows: ...` and, after the first reading,

@@ -8,7 +8,7 @@ The plugin creates the devices below. No unit number ever changes and no unit is
 
 Every chosen device is created when missing (at start and at every poll) and *in use* from the start, so nothing has to be added by hand under Setup > Devices. All devices are read-only: a command sent to one is answered by writing its real value back.
 
-## Rain (units 1-8 and 19-22)
+## Rain (units 1-8 and 19-21)
 
 The rain that fell in each window, in mm.
 
@@ -22,12 +22,11 @@ The rain that fell in each window, in mm.
 | 6 | Rain 90 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 90 d (see *The windows*) | `RS_LAST_090_DAYS=Y` (Y by default) |
 | 7 | Rain 180 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 180 d (see *The windows*) | `RS_LAST_180_DAYS=Y` (Y by default) |
 | 8 | Rain 365 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 365 d (see *The windows*) | `RS_LAST_365_DAYS=Y` (Y by default) |
-| 19 | Rain 24 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 24 d (see *The windows*) | `RS_LAST_024_DAYS=Y` (N by default) |
-| 20 | Rain 60 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 60 d (see *The windows*) | `RS_LAST_060_DAYS=Y` (N by default) |
-| 21 | Rain 120 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 120 d (see *The windows*) | `RS_LAST_120_DAYS=Y` (N by default) |
-| 22 | Rain 360 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 360 d (see *The windows*) | `RS_LAST_360_DAYS=Y` (N by default) |
+| 19 | Rain 60 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 60 d (see *The windows*) | `RS_LAST_060_DAYS=Y` (N by default) |
+| 20 | Rain 120 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 120 d (see *The windows*) | `RS_LAST_120_DAYS=Y` (N by default) |
+| 21 | Rain 360 d | Custom Sensor (mm, one decimal) | mm | the rain of the last 360 d (see *The windows*) | `RS_LAST_360_DAYS=Y` (N by default) |
 
-## Peak rain rate (units 9-16 and 23-26)
+## Peak rain rate (units 9-16 and 22-24)
 
 The highest rain rate that was seen in each window, in mm/h. Created unless the setting *Statistics* is *Rain only*; with that setting they are neither created nor updated (devices that already exist stay and keep their last value: delete them by hand).
 
@@ -41,10 +40,9 @@ The highest rain rate that was seen in each window, in mm/h. Created unless the 
 | 14 | Peak Rain Rate 90 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 90 d | `RS_LAST_090_DAYS=Y` (Y by default) |
 | 15 | Peak Rain Rate 180 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 180 d | `RS_LAST_180_DAYS=Y` (Y by default) |
 | 16 | Peak Rain Rate 365 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 365 d | `RS_LAST_365_DAYS=Y` (Y by default) |
-| 23 | Peak Rain Rate 24 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 24 d | `RS_LAST_024_DAYS=Y` (N by default) |
-| 24 | Peak Rain Rate 60 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 60 d | `RS_LAST_060_DAYS=Y` (N by default) |
-| 25 | Peak Rain Rate 120 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 120 d | `RS_LAST_120_DAYS=Y` (N by default) |
-| 26 | Peak Rain Rate 360 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 360 d | `RS_LAST_360_DAYS=Y` (N by default) |
+| 22 | Peak Rain Rate 60 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 60 d | `RS_LAST_060_DAYS=Y` (N by default) |
+| 23 | Peak Rain Rate 120 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 120 d | `RS_LAST_120_DAYS=Y` (N by default) |
+| 24 | Peak Rain Rate 360 d | Custom Sensor (mm/h, two decimals) | mm/h | largest rain rate in the last 360 d | `RS_LAST_360_DAYS=Y` (N by default) |
 
 ## Status (units 17-18)
 
@@ -63,7 +61,7 @@ Rain is stored in a round-robin archive: fixed rings of equally long time slots,
 | Tier | Slot | Slots | Remembers | Answers |
 |---|---|---:|---|---|
 | fine | 5 min | 2016 | 7 d | 1 d, 2 d, 7 d |
-| coarse | 15 min | 35040 | 365 d | 14 d, 24 d, 30 d, 60 d, 90 d, 120 d, 180 d, 360 d, 365 d |
+| coarse | 15 min | 35040 | 365 d | 14 d, 30 d, 60 d, 90 d, 120 d, 180 d, 360 d, 365 d |
 
 The **rain** of a window is the last N hours or days: the slot that is running now, the slots before it that make up the window, and the part of the slot before those that still lies inside the period, in proportion (rain is taken to have fallen evenly within a slot; the rain rings keep one slot more than the table says, for that part). So a storm fades out of a window through one slot instead of dropping out in one step, and on average the window is neither too high nor too low. The **peak rate** cannot be taken in proportion: it is made of whole slots only, the running one plus the ones before it, so it covers between N-1 slots and N slots of real time and **never reaches further back than the name says**:
 
@@ -73,13 +71,12 @@ The **rain** of a window is the last N hours or days: the slot that is running n
 | 2 d | fine (5 min) | 576 | the last 2 d | 47 h 55 min to 2 d | units 2 and 10 | `RS_LAST_002_DAYS` | Y |
 | 7 d | fine (5 min) | 2016 | the last 7 d | 167 h 55 min to 7 d | units 3 and 11 | `RS_LAST_007_DAYS` | Y |
 | 14 d | coarse (15 min) | 1344 | the last 14 d | 13 d 23 h 45 min to 14 d | units 4 and 12 | `RS_LAST_014_DAYS` | Y |
-| 24 d | coarse (15 min) | 2304 | the last 24 d | 23 d 23 h 45 min to 24 d | units 19 and 23 | `RS_LAST_024_DAYS` | N |
 | 30 d | coarse (15 min) | 2880 | the last 30 d | 29 d 23 h 45 min to 30 d | units 5 and 13 | `RS_LAST_030_DAYS` | Y |
-| 60 d | coarse (15 min) | 5760 | the last 60 d | 59 d 23 h 45 min to 60 d | units 20 and 24 | `RS_LAST_060_DAYS` | N |
+| 60 d | coarse (15 min) | 5760 | the last 60 d | 59 d 23 h 45 min to 60 d | units 19 and 22 | `RS_LAST_060_DAYS` | N |
 | 90 d | coarse (15 min) | 8640 | the last 90 d | 89 d 23 h 45 min to 90 d | units 6 and 14 | `RS_LAST_090_DAYS` | Y |
-| 120 d | coarse (15 min) | 11520 | the last 120 d | 119 d 23 h 45 min to 120 d | units 21 and 25 | `RS_LAST_120_DAYS` | N |
+| 120 d | coarse (15 min) | 11520 | the last 120 d | 119 d 23 h 45 min to 120 d | units 20 and 23 | `RS_LAST_120_DAYS` | N |
 | 180 d | coarse (15 min) | 17280 | the last 180 d | 179 d 23 h 45 min to 180 d | units 7 and 15 | `RS_LAST_180_DAYS` | Y |
-| 360 d | coarse (15 min) | 34560 | the last 360 d | 359 d 23 h 45 min to 360 d | units 22 and 26 | `RS_LAST_360_DAYS` | N |
+| 360 d | coarse (15 min) | 34560 | the last 360 d | 359 d 23 h 45 min to 360 d | units 21 and 24 | `RS_LAST_360_DAYS` | N |
 | 365 d | coarse (15 min) | 35040 | the last 365 d | 364 d 23 h 45 min to 365 d | units 8 and 16 | `RS_LAST_365_DAYS` | Y |
 
 - The windows slide with the clock: they are recomputed at least every 60 seconds and after every reading, so rain leaves a window while it is dry, without any new reading.
