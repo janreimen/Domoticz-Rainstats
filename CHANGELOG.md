@@ -5,6 +5,25 @@ All notable changes to this project are documented here. The format follows
 (`MAJOR.MINOR.PATCH`, optionally a fourth `.N` for small fixes) so that release tags work with plugin managers
 such as PyPluginStore.
 
+## [0.0.4] - 2026-11-23
+
+A fix release for one error line in the Domoticz log. The statistics, the devices, the settings and the state file are
+unchanged.
+
+### Fixed
+- **No more `Error: (Rain Statistics) CPlugin:PyDomoticz_Debugging, illegal operation, Plugin has not started yet.`**
+  Domoticz imports `plugin.py` before the plugin has started, and logs every call of its `Domoticz` module made until
+  then as an error. The plugin object made its logger at that moment, and the logger told Domoticz its level (Off) at
+  once: one such error line at every start of the hardware and at every reload of the plugins. A new logger now makes
+  no call at all; `onStart` sets the level, and that is when Domoticz is told. Nothing else was lost: the line was
+  harmless for the numbers, and the debug level of the hardware page was applied correctly.
+- Tests pin it down: importing `plugin.py` must call nothing in Domoticz, a new logger must not call it, and the level
+  must reach Domoticz once at start, also when it is Off. All three fail with the code of 0.0.3. The logger has its
+  own tests now (levels, a level that is told only when it changes, masking of secrets, a refusal of Domoticz).
+
+### Changed
+- The whole test suite (430 tests) was run on Python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13.
+
 ## [0.0.3] - 2026-11-22
 
 A fix release: the same rain data now show the same numbers on every Python version, and the tests and the GitHub
@@ -98,5 +117,6 @@ changes that came out of that run, see [what is verified and what is not](README
 - **The rain rate is used**: peak per window.
 - **A source that cannot be read does not freeze the numbers**, and it is logged once.
 
+[0.0.4]: https://github.com/janreimen/Domoticz-Rainstats/releases/tag/v0.0.4
 [0.0.3]: https://github.com/janreimen/Domoticz-Rainstats/releases/tag/v0.0.3
 [0.0.2]: https://github.com/janreimen/Domoticz-Rainstats/releases/tag/v0.0.2

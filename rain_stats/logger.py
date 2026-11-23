@@ -24,7 +24,11 @@ class Logger:
         self.level = OFF
         self._debugging = None
         self._secrets: List[str] = []
-        self.set_level(level)
+        # A new Logger touches Domoticz only when it is asked for a level: plugin.py makes one while Domoticz imports
+        # it, and every call of the Domoticz module before onStart is logged by Domoticz as an error ("illegal
+        # operation, Plugin has not started yet"). onStart sets the level, which tells Domoticz, level Off included.
+        if level != OFF:
+            self.set_level(level)
 
     # -- configuration --------------------------------------------------------------------------------------
     def set_level(self, level: int) -> None:

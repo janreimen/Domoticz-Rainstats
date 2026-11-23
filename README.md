@@ -27,7 +27,7 @@ survives restarts. It replaces the dzVents script *RainStats V2.6* and can take 
 * **Modular.** Counter logic, round-robin rings, statistics, state file, API client, settings, device layer and
   polling are separate modules; only `plugin.py` touches Domoticz.
 
-> **Status:** version 0.0.3. Developed against a **simulated** Domoticz (a real HTTP and TLS server inside the test
+> **Status:** version 0.0.4. Developed against a **simulated** Domoticz (a real HTTP and TLS server inside the test
 > suite) and a stub of the plugin API. Since the evening of **2026-11-19** it runs in the author's **Domoticz 2026.4**:
 > days of use, not months. The counting logic is checked against a ground-truth simulation of a year of weather; the
 > rest of the Domoticz side is checked against the documentation and the source of Domoticz. Read

@@ -193,6 +193,19 @@ class PluginTests(unittest.TestCase):
         plugin.onStop()
         self.assertEqual(len([t for t in self.errors() if "RuntimeError: boom" in t]), 3)
 
+    def test_importing_the_plugin_calls_nothing_in_domoticz(self):
+        # Domoticz imports plugin.py before the plugin has started, and logs every call of its module until then as an
+        # error ("CPlugin:PyDomoticz_Debugging, illegal operation, Plugin has not started yet.")
+        self.load()
+        self.assertEqual(dz.logs, [])
+
+    def test_the_level_is_told_to_domoticz_at_start_even_when_it_is_off(self):
+        plugin = self.load(Mode6="0")
+        self.assertEqual(dz.logs, [])
+        plugin.onStart()
+        self.assertEqual([entry for entry in dz.logs if entry[0] == "debugging"], [("debugging", 0)])
+        plugin.onStop()
+
     def test_debug_levels_wire_up_domoticz_debugging(self):
         plugin = self.load(Mode6="3")
         plugin.onStart()
